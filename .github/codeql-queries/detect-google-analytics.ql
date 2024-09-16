@@ -1,6 +1,6 @@
 /**
- * @name Detect Google Tag Manager (gtag.js) in JavaScript/TypeScript
- * @description Identifies the inclusion of Google Tag Manager (`gtag.js`) and usage of the `gtag` function in JavaScript and TypeScript files.
+ * @name Detect Google Tag Manager (gtag.js) and vue-gtag
+ * @description Identifies the inclusion of Google Tag Manager (`gtag.js`) and usage of the `gtag` function in JavaScript and TypeScript files, including indirect usage via `vue-gtag`.
  * @kind path-problem
  * @id js-ts/google-tag-manager
  * @tags tracking, javascript, typescript
@@ -35,15 +35,32 @@ predicate isGtagFunctionCall(CallExpr call) {
 }
 
 /**
- * Detects `gtag.js` usage in both JavaScript and TypeScript files.
+ * Predicate to detect import of `vue-gtag` module.
  */
-from Script s, CallExpr call
-where isGoogleTagManager(s) or isGtagFunctionCall(call)
-select s, "This file includes Google Tag Manager (gtag.js) or uses the 'gtag' function."
+predicate isVueGtagImport(Import i) {
+  i.getImportedModule().getName() = "vue-gtag"
+}
 
 /**
- * Detects `gtag` usage specifically within TypeScript files.
+ * Predicate to detect calls to functions from `vue-gtag`.
+ */
+predicate isVueGtagFunctionCall(CallExpr call) {
+  exists(Import i |
+    i.getImportedModule().getName() = "vue-gtag" and
+    call.getCallee().(RefersTo).getAnIdentifier() in i.getImportedIdentifiers()
+  )
+}
+
+/**
+ * Detects `gtag.js` usage or `vue-gtag` imports in JavaScript and TypeScript files.
+ */
+from Script s, CallExpr call
+where isGoogleTagManager(s) or isGtagFunctionCall(call) or isVueGtagImport(s) or isVueGtagFunctionCall(call)
+select s, "This file includes Google Tag Manager (gtag.js), uses the 'gtag' function, or imports 'vue-gtag'."
+
+/**
+ * Detects `gtag` or `vue-gtag` usage specifically within TypeScript files.
  */
 from TypeScriptModule ts, CallExpr callTs
-where isGtagFunctionCall(callTs)
-select ts, "This TypeScript file includes the usage of the 'gtag' function."
+where isGtagFunctionCall(callTs) or isVueGtagFunctionCall(callTs)
+select ts, "This TypeScript file includes the usage of the 'gtag' function or imports 'vue-gtag'."
