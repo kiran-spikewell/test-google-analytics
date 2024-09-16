@@ -28,7 +28,10 @@ predicate isGoogleTagManager(Script s) {
  * Predicate to detect usage of the `gtag` function in JavaScript and TypeScript.
  */
 predicate isGtagFunctionCall(CallExpr call) {
-  call.getCallee().(RefersTo).getAnIdentifier().getName() = "gtag"
+  exists(Identifier id |
+    id = call.getCallee().(RefersTo).getAnIdentifier() and
+    id.getName() = "gtag"
+  )
 }
 
 /**
@@ -39,7 +42,7 @@ where isGoogleTagManager(s) or isGtagFunctionCall(call)
 select s, "This file includes Google Tag Manager (gtag.js) or uses the 'gtag' function."
 
 /**
- * Additional detection for TypeScript files.
+ * Detects `gtag` usage specifically within TypeScript files.
  */
 from TypeScriptModule ts, CallExpr callTs
 where isGtagFunctionCall(callTs)
