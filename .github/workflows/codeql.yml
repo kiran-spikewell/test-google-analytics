@@ -64,6 +64,7 @@ jobs:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
         queries: +security-extended,security-and-quality,./.github/codeql-queries
+        trap-import-path: "**/*.d.ts"
         # If you wish to specify custom queries, you can do so here or in a config file.
         # By default, queries listed here will override any specified in a config file.
         # Prefix the list here with "+" to use these queries and those in the config file.
